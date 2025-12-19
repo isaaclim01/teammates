@@ -104,6 +104,13 @@ public final class HibernateUtil {
      * Builds a session factory if it does not already exist.
      */
     public static void buildSessionFactory(String dbUrl, String username, String password) {
+        String persistenceUnit = Config.getPersistenceUnit();
+        if ("datastore".equals(persistenceUnit)) {
+            System.out.println("Skipping Hibernate initialization for Datastore");
+            return; // Skip Hibernate for Datastore
+        }
+
+
         synchronized (HibernateUtil.class) {
             if (sessionFactory != null) {
                 return;
@@ -148,6 +155,10 @@ public final class HibernateUtil {
      * Returns the SessionFactory.
      */
     private static SessionFactory getSessionFactory() {
+        if (Config.isUsingDatastore()) {
+            throw new IllegalStateException("Hibernate is not available when using Datastore");
+        }
+
         assert sessionFactory != null;
 
         return sessionFactory;
@@ -158,6 +169,10 @@ public final class HibernateUtil {
      * @see SessionFactory#getCurrentSession()
      */
     private static Session getCurrentSession() {
+        if (Config.isUsingDatastore()) {
+            throw new IllegalStateException("Hibernate is not available when using Datastore");
+        }
+
         return getSessionFactory().getCurrentSession();
     }
 
@@ -194,6 +209,11 @@ public final class HibernateUtil {
      * @see Transaction#begin()
      */
     public static void beginTransaction() {
+        if (Config.isUsingDatastore()) {
+            // No-op for Datastore
+            return;
+        }
+
         Transaction transaction = getCurrentSession().getTransaction();
         transaction.begin();
     }
@@ -203,6 +223,10 @@ public final class HibernateUtil {
      * @see Transaction#rollback()
      */
     public static void rollbackTransaction() {
+        if (Config.isUsingDatastore()) {
+            // No-op for Datastore
+            return;
+        }
         Session session = getCurrentSession();
         if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
                 || session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
@@ -215,6 +239,10 @@ public final class HibernateUtil {
      * @see Transaction#commit()
      */
     public static void commitTransaction() {
+        if (Config.isUsingDatastore()) {
+            // No-op for Datastore
+            return;
+        }
         Transaction transaction = getCurrentSession().getTransaction();
         transaction.commit();
     }
