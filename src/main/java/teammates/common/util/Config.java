@@ -128,6 +128,8 @@ public final class Config {
 
     private static final Logger log = Logger.getLogger();
 
+    private static final String PERSISTENCE_UNIT;
+
     static {
         Properties properties = new Properties();
         try (InputStream buildPropStream = FileHelper.getResourceAsStream("build.properties")) {
@@ -196,6 +198,9 @@ public final class Config {
         APP_LOCALDATASTORE_PORT = Integer.parseInt(devProperties.getProperty("app.localdatastore.port", "8484"));
         ENABLE_DEVSERVER_LOGIN = Boolean.parseBoolean(devProperties.getProperty("app.enable.devserver.login", "false"));
         TASKQUEUE_ACTIVE = Boolean.parseBoolean(devProperties.getProperty("app.taskqueue.active", "true"));
+        String persistence = getProperty(properties, devProperties, "persistence.unit", "datastore");
+        PERSISTENCE_UNIT= persistence;
+
     }
 
     private Config() {
@@ -321,6 +326,14 @@ public final class Config {
     public static boolean isUsingMailjet() {
         return "mailjet".equalsIgnoreCase(EMAIL_SERVICE) && MAILJET_APIKEY != null && !MAILJET_APIKEY.isEmpty()
                 && MAILJET_SECRETKEY != null && !MAILJET_SECRETKEY.isEmpty();
+    }
+
+    public static String getPersistenceUnit() {
+        return PERSISTENCE_UNIT;
+    }
+
+    public static boolean isUsingDatastore() {
+        return PERSISTENCE_UNIT.equals("datastore");
     }
 
 }

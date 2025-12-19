@@ -13,6 +13,7 @@ import com.google.cloud.datastore.DatastoreException;
 
 import teammates.common.datatransfer.logs.RequestLogUser;
 import teammates.common.exception.DeadlineExceededException;
+import teammates.common.util.Config;
 import teammates.common.util.HibernateUtil;
 import teammates.common.util.Logger;
 import teammates.ui.request.InvalidHttpRequestBodyException;
@@ -121,15 +122,23 @@ public class WebApiServlet extends HttpServlet {
     private ActionResult executeWithTransaction(Action action, HttpServletRequest req)
             throws InvalidOperationException, InvalidHttpRequestBodyException, UnauthorizedAccessException {
         try {
-            HibernateUtil.beginTransaction();
+            if (!Config.isUsingDatastore()) {
+                HibernateUtil.beginTransaction();
+            }
+
             action.init(req);
             action.checkAccessControl();
 
             ActionResult result = action.execute();
-            HibernateUtil.commitTransaction();
+
+            if (!Config.isUsingDatastore()) {
+                HibernateUtil.commitTransaction();
+            }
             return result;
         } catch (Exception e) {
-            HibernateUtil.rollbackTransaction();
+            if (!Config.isUsingDatastore()) {
+                HibernateUtil.rollbackTransaction();
+            }
             throw e;
         }
     }
